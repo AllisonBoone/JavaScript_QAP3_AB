@@ -56,7 +56,7 @@ app.post('/tasks', async (req, res) => {
 
 // PUT /tasks/:id - Update a task's status
 app.put('/tasks/:id', async (req, res) => {
-  const taskId = parseInt(request.params.id, 10);
+  const taskId = parseInt(req.params.id, 10);
   const { status } = req.body;
 
   try {
