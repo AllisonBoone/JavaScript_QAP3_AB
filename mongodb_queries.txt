@@ -1,0 +1,20 @@
+MongoDB Queries:
+
+Create a collection named "books" and inserted them into sample data tables:
+db.books.insertMany([
+  { title: 'The Hobbit', author: 'J.R.R. Tolkien', genre: 'Fantasy', year: 1937 },
+  { title: 'To Kill a Mockingbird', author: 'Harper Lee', genre: 'Fiction', year: 1960 },
+  { title: '1984', author: 'George Orwell', genre: 'Dystopian', year: 1949 }
+]);
+
+Retrieved all titles of the books listed:
+db.books.find({}, { title: 1, _id: 0 });
+
+Found all books written by Tolkien:
+db.books.find({ author: 'J.R.R. Tolkien' });
+
+Updated the genre of 1984 to Science Fiction instead of Dystopia:
+db.books.updateOne({ title: '1984' }, { $set: { genre: 'Science Fiction' } });
+
+Deleted the book The Hobbit:
+db.books.deleteOne({ title: 'The Hobbit' });
