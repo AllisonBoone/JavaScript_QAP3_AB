@@ -5,27 +5,57 @@ const PORT = 3000;
 
 app.use(express.json());
 
+const pool = new Pool({
+  user: process.env.PG_USER,
+  host: process.env.PG_HOST,
+  database: process.env.PG_DATABASE,
+  password: process.env.PG_PASSWORD,
+  port: process.env.PG_PORT,
+});
+
+const createTable = async () => {
+    const createQuery = 
+    CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        description TEXT NOT NULL,
+        status TEXT NOT NULL
+    )
+    ;
+    await pool.query(createQuery);
+};
+createTable();
+
 let tasks = [
   { id: 1, description: 'Buy groceries', status: 'incomplete' },
   { id: 2, description: 'Read a book', status: 'complete' },
 ];
 
 // GET /tasks - Get all tasks
-app.get('/tasks', (req, res) => {
-  res.json(tasks);
+app.get('/tasks', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM tasks');
+        res.json(tasks);
+    } catch (error) {
+res.status(500).json({error: 'Database Error'});
+    }
+  
 });
 
 // POST /tasks - Add a new task
-app.post('/tasks', (request, response) => {
-  const { id, description, status } = request.body;
-  if (!id || !description || !status) {
+app.post('/tasks', async (request, response) => {
+  const { description, status } = request.body;
+  if ( !description || !status) {
     return response
       .status(400)
-      .json({ error: 'All fields (id, description, status) are required' });
+      .json({ error: 'All fields (description, status) are required' });
   }
+   try {
+    await pool.query('INSERT INTO tasks (description, status) VALUE($1, $2)'),[description, status];
+    res.status(201).json({ message: 'Task added successfully' });
+   } catch (error){
+    res.status(201).json({error: 'Database Error'});
+   }
 
-  tasks.push({ id, description, status });
-  response.status(201).json({ message: 'Task added successfully' });
 });
 
 // PUT /tasks/:id - Update a task's status
