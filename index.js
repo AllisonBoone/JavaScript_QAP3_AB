@@ -29,37 +29,39 @@ createTable();
 app.get('/tasks', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tasks');
-    res.json(tasks);
+    res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: 'Database Error' });
   }
 });
 
 // POST /tasks - Add a new task
-app.post('/tasks', async (request, response) => {
-  const { description, status } = request.body;
+app.post('/tasks', async (req, res) => {
+  const { description, status } = req.body;
   if (!description || !status) {
-    return response
+    return res
       .status(400)
       .json({ error: 'All fields (description, status) are required' });
   }
   try {
-    await pool.query('INSERT INTO tasks (description, status) VALUE($1, $2)'),
-      [description, status];
+    await pool.query(
+      'INSERT INTO tasks (description, status) VALUES ($1, $2)',
+      [description, status]
+    );
     res.status(201).json({ message: 'Task added successfully' });
   } catch (error) {
-    res.status(201).json({ error: 'Database Error' });
+    res.status(500).json({ error: 'Database Error' });
   }
 });
 
 // PUT /tasks/:id - Update a task's status
-app.put('/tasks/:id', async (request, response) => {
+app.put('/tasks/:id', async (req, res) => {
   const taskId = parseInt(request.params.id, 10);
-  const { status } = request.body;
+  const { status } = req.body;
 
   try {
     const result = await pool.query(
-      'UPDATE tasks SET status = $1 WHERE id = $2 RETURN *',
+      'UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *',
       [status, taskId]
     );
     if (result.rowCount === 0) {
@@ -71,8 +73,8 @@ app.put('/tasks/:id', async (request, response) => {
   }
 });
 // DELETE /tasks/:id - Delete a task
-app.delete('/tasks/:id', async (request, response) => {
-  const taskId = parseInt(request.params.id, 10);
+app.delete('/tasks/:id', async (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
 
   try {
     const result = await pool.query(
